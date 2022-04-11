@@ -1,157 +1,135 @@
-import os
+import typing
+from typing import Optional, TypeVar, Type
+from types import TracebackType
 import yarl
 import asyncio
-import typing
-from typing import Optional, Union
-
 import aiohttp
 
+from .gist import Gist
+from .exceptions import ClientAuthorizationError
 from .constants import API_URL
 
 
-class GistClient:
-    """The client used to interact with the GitHub Gists API.
+__all__ = ("Client",)
 
-    Parameters
-    ----------
-    username: :class:`str`
-        The username to be passed to the 'User-Agent' header during requests.
-    access_token: :class:`str`
-    session: Optional[Union[:class:`aiohttp.ClientSession`]]
-    
-    Attributes
-    ----------
-    session: Optional[Union[:class:`aiohttp.ClientSession`]]
-        Optional session to be passed to the client during creation.
-    """
-    def __init__(self, *, username: str, access_token: str, session: Optional[aiohttp.ClientSession] = None):
-        self.username = username
+
+class Client:
+    def __init__(self, access_token: str):
         self.access_token = access_token
-        self.session = session
 
-        self.URL = 'gists'
         self._request_lock = asyncio.Lock()
+        self.user_data = asyncio.run(self.get_user_data())
 
-    async def _generate_session(self):
-        self.session = aiohttp.ClientSession()
+    async def request(
+        self, method: str, url: str, *, params=None, data=None, headers=None
+    ) -> typing.Dict:
+        """The method to make asynchronous requests to the GitHub API"""
 
-    async def request(self, method, *, params=None, data=None, headers=None):
         hdrs = {
-            'Accept': "application/vnd.github.inertia-preview+json",
-            'User-Agent': self.username,
-            'Authorization': "token %s" % self.access_token,
+            "Accept": "application/vnd.github.v3+json",
+            # Use the user_data to get the "login" value, which is the username, and use it as the User-Agent
+            "User-Agent": (
+                self.user_data["login"] if hasattr(self, "user_data") else "User-Agent"
+            ),
+            "Authorization": "token %s" % self.access_token,
         }
 
-        request_url = yarl.URL(API_URL) / self.URL
+        request_url = yarl.URL(API_URL) / url
 
         if headers is not None and isinstance(headers, dict):
             hdrs.update(headers)
 
-        if not self.session:
-            await self._generate_session()
-
         await self._request_lock.acquire()
         try:
-            async with self.session.request(
+            async with aiohttp.ClientSession() as session:
+                response = await session.request(
                     method, request_url, params=params, json=data, headers=hdrs
-                ) as response:
+                )
                 remaining = response.headers.get("X-Ratelimit-Remaining")
-                json_data = await response.json()
+                try:
+                    data = await response.json()
+                except aiohttp.client_exceptions.ContentTypeError:
+                    data = response.content
                 if response.status == 429 or remaining == "0":
                     reset_after = float(response.headers.get("X-Ratelimit-Reset-After"))
                     await asyncio.sleep(reset_after)
                     self._request_lock.release()
                     return await self.request(
-                        method, url, params=params, data=data, headers=headers
+                        method, request_url, params=params, data=data, headers=headers
                     )
                 elif 300 > response.status >= 200:
-                    return json_data
+                    return data
                 else:
                     raise response.raise_for_status()
         finally:
             if self._request_lock.locked():
                 self._request_lock.release()
 
-    async def fetch_data(self, gist_id: str):
+    async def get_user_data(self) -> typing.Dict:
+        # To use the username as the User-Agent
+        user_data = await self.fetch_user()
+        return user_data
+
+    async def fetch_user(self) -> typing.Dict:
+        """Fetch data of the authenticated user"""
+
+        user_data: typing.Dict = await self.request("GET", "user")
+        return user_data
+
+    async def fetch_data(self, gist_id: str) -> typing.Dict:
         """Fetch data of a Gist"""
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-        }
 
-        url = "gists/%s" % gist_id
+        gist_data: typing.Dict = await self.request("GET", "gists/%s" % gist_id)
+        return gist_data
 
-        gist_data_json = await self.request("GET", url, headers=headers)
-        return gist_data_json
+    async def get_gist(self, gist_id: str) -> Gist:
+        """Get a Gist object representing the gist associated with the provided gist_id"""
 
-    async def get_gist(cls, gist_id: str):
-        
+        data = await self.fetch_data(gist_id)
+        return Gist(data, self)
 
-    @classmethod
     async def create_gist(
-        cls,
-        access_token: str,
-        content: str,
+        self,
+        files: typing.Dict,  # e.g. {"output.txt": {"content": "Content of the file"}}
         *,
         description: str = None,
-        filename: str = "output.txt",
         public: bool = True,
-    ):
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-        }
+    ) -> Gist:
+        """Create a new gist and return a Gist object associated with that gist"""
 
-        data = {"public": public, "files": {filename: {"content": content}}}
+        data = {"public": public, "files": files}
         params = {"scope": "gist"}
 
         if description:
             data["description"] = description
 
-        github = Github(access_token)
-        js = await github.request(
-            "POST", "gists", data=data, headers=headers, params=params
-        )
-        return await cls.get_gist(access_token, js["id"])
+        js = await self.request("POST", "gists", data=data, params=params)
+        return Gist(js, self)
 
-    
-class Gist:
-    def __init__(self, access_token: str = os.getenv("githubTOKEN")):
-        self.access_token = access_token
-        self.github = Github(self.access_token)
+    async def update_gist(self, gist_id: str):
+        """Re-fetch data and update the provided Gist object."""
 
-    @classmethod
-    def from_dict(cls, gist_data_dict: typing.Dict):
-        
+        updated_gist_data = await self.fetch_data(gist_id)
+        return updated_gist_data
 
-    async def update(self):
-        """Re-fetch data and update the instance."""
-        updated_gist_data = await self.fetch_data(self.id, self.access_token)
-        self.__dict__.update(updated_gist_data)
-
-    async def edit(
+    async def edit_gist(
         self,
-        files: typing.Dict,  # e.g. {"output.txt": {"content": "Content if the file"}}
+        gist_id: str,
         *,
+        files: typing.Dict,  # e.g. {"output.txt": {"content": "Content of the file"}}
         description: str = None,
-    ):
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-        }
+    ) -> typing.Dict:
+        """Edit the gist associated with the provided gist id, and return the edited data"""
 
         data = {"files": files}
 
         if description:
             data["description"] = description
 
-        url = "gists/%s" % self.id
+        edited_gist_data = await self.request("PATCH", "gists/%s" % gist_id, data=data)
+        return edited_gist_data
 
-        js = await self.github.request("PATCH", url, data=data, headers=headers)
+    async def delete_gist(self, gist_id: str):
+        """Delete the gist associated with the provided gist id"""
 
-    async def delete(
-        self,
-    ):
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-        }
-
-        url = "gists/%s" % self.id
-        js = await self.github.request("DELETE", url, headers=headers)
+        await self.request("DELETE", "gists/%s" % gist_id)
