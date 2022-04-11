@@ -4,6 +4,7 @@ from types import TracebackType
 import yarl
 import asyncio
 import aiohttp
+import sys
 
 from .gist import Gist
 from .exceptions import ClientAuthorizationError
@@ -18,7 +19,7 @@ class Client:
         self.access_token = access_token
 
         self._request_lock = asyncio.Lock()
-        self.user_data = asyncio.run(self.get_user_data())
+        self.user_agent = f"Gists.py (https://github.com/witherredaway/gists.py) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}"
 
     async def request(
         self, method: str, url: str, *, params=None, data=None, headers=None
@@ -27,10 +28,7 @@ class Client:
 
         hdrs = {
             "Accept": "application/vnd.github.v3+json",
-            # Use the user_data to get the "login" value, which is the username, and use it as the User-Agent
-            "User-Agent": (
-                self.user_data["login"] if hasattr(self, "user_data") else "User-Agent"
-            ),
+            "User-Agent": self.user_agent,
             "Authorization": "token %s" % self.access_token,
         }
 
@@ -66,7 +64,6 @@ class Client:
                 self._request_lock.release()
 
     async def get_user_data(self) -> typing.Dict:
-        # To use the username as the User-Agent
         user_data = await self.fetch_user()
         return user_data
 
