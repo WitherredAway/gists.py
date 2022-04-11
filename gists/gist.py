@@ -1,6 +1,9 @@
 import typing
 
 
+__all__ = ("Gist",)
+
+
 class Gist:
     def __init__(self, data: typing.Dict, client: "Client"):
         self.data = data

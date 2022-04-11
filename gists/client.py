@@ -22,15 +22,23 @@ class Client:
         self.user_agent = f"Gists.py (https://github.com/witherredaway/gists.py) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}"
 
     async def request(
-        self, method: str, url: str, *, params=None, data=None, headers=None
+        self,
+        method: str,
+        url: str,
+        *,
+        params=None,
+        data=None,
+        headers=None,
+        authorization: bool = True,
     ) -> typing.Dict:
         """The method to make asynchronous requests to the GitHub API"""
 
         hdrs = {
             "Accept": "application/vnd.github.v3+json",
             "User-Agent": self.user_agent,
-            "Authorization": "token %s" % self.access_token,
         }
+        if authorization:
+            hdrs["Authorization"] = "token %s" % self.access_token
 
         request_url = yarl.URL(API_URL) / url
 
@@ -81,7 +89,9 @@ class Client:
     async def fetch_data(self, gist_id: str) -> typing.Dict:
         """Fetch data of a Gist"""
 
-        gist_data: typing.Dict = await self.request("GET", "gists/%s" % gist_id)
+        gist_data: typing.Dict = await self.request(
+            "GET", "gists/%s" % gist_id, authorization=False
+        )
         return gist_data
 
     async def get_gist(self, gist_id: str) -> Gist:
