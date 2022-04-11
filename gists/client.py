@@ -7,7 +7,7 @@ import aiohttp
 import sys
 
 from .gist import Gist
-from .exceptions import ClientAuthorizationError
+from .exceptions import AuthorizationFailure, NotFound
 from .constants import API_URL
 
 
@@ -57,8 +57,13 @@ class Client:
                     )
                 elif 300 > response.status >= 200:
                     return data
-                else:
-                    raise response.raise_for_status()
+                elif response.status == 404:
+                    raise NotFound(response, data)
+                elif response.status == 401:
+                    raise AuthorizationFailure(
+                        "Invalid personal access token has been passed."
+                    )
+
         finally:
             if self._request_lock.locked():
                 self._request_lock.release()
