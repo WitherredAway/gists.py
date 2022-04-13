@@ -114,8 +114,9 @@ class Client:
 
     async def create_gist(
         self,
-        files: typing.Dict,  # e.g. {"output.txt": {"content": "Content of the file"}}
         *,
+        # TODO File object rather than a dictionary
+        files: typing.Dict,  # e.g. {'output.txt': {'filename': "output.txt", 'content': "Content of the file"}}
         description: str = None,
         public: bool = True,
     ) -> Gist:
@@ -140,7 +141,8 @@ class Client:
         self,
         gist_id: str,
         *,
-        files: typing.Dict,  # e.g. {"output.txt": {"content": "Content of the file"}}
+        # TODO File object rather than a dictionary
+        files: typing.Dict,  # e.g. {'output.txt': {'filename': "output.txt", 'content': "Content of the file"}}
         description: str = None,
     ) -> typing.Dict:
         """Edit the gist associated with the provided gist id, and return the edited data"""

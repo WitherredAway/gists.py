@@ -14,6 +14,7 @@ class Gist:
     def _update_attrs(self, data: typing.Dict):
         """Update the Gist object's attributes to the provided data"""
 
+        # TODO use getter and setters to do this, the current way is not good practise
         self.__dict__.update(data)
 
     async def update(self):
