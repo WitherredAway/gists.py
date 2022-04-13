@@ -88,17 +88,14 @@ class Client:
             if self._request_lock.locked():
                 self._request_lock.release()
 
-    async def get_user_data(self) -> typing.Dict:
-        user_data = await self.fetch_user()
-        return user_data
-
-    async def fetch_user(self) -> typing.Dict:
+    async def fetch_user_data(self) -> typing.Dict:
         """Fetch data of the authenticated user"""
 
+        # TODO User object rather than the raw json data
         user_data: typing.Dict = await self.request("GET", "user")
         return user_data
 
-    async def fetch_data(self, gist_id: str) -> typing.Dict:
+    async def fetch_gist_data(self, gist_id: str) -> typing.Dict:
         """Fetch data of a Gist"""
 
         gist_data: typing.Dict = await self.request(
@@ -112,7 +109,7 @@ class Client:
         Does not require authorization.
         """
 
-        data = await self.fetch_data(gist_id)
+        data = await self.fetch_gist_data(gist_id)
         return Gist(data, self)
 
     async def create_gist(
