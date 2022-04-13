@@ -15,12 +15,23 @@ __all__ = ("Client",)
 
 
 class Client:
-    def __init__(self, access_token: str):
-        self.access_token = access_token
+    """Does not take access token directly to allow actions that do not require authorization.
+
+    Use the authorize method to authorize
+    """
+    
+    def __init__(self):
+        self.access_token = None # Set by Client.authorize()
 
         self._request_lock = asyncio.Lock()
         self.user_agent = f"Gists.py (https://github.com/witherredaway/gists.py) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}"
 
+    async def authorize(self, access_token: str):
+        self.access_token = access_token
+
+        # TODO User object rather than the raw json data
+        self.user_data = await self.fetch_user_data()
+    
     async def request(
         self,
         method: str,
@@ -38,7 +49,10 @@ class Client:
             "User-Agent": self.user_agent,
         }
         if authorization:
-            hdrs["Authorization"] = "token %s" % self.access_token
+            if not self.access_token:
+                raise AuthorizationFailure("To use functions that require authorization, please authorize the Client with Client.authorize")
+            else:
+                hdrs["Authorization"] = "token %s" % self.access_token
 
         request_url = yarl.URL(API_URL) / url
 
@@ -95,7 +109,10 @@ class Client:
         return gist_data
 
     async def get_gist(self, gist_id: str) -> Gist:
-        """Get a Gist object representing the gist associated with the provided gist_id"""
+        """Get a Gist object representing the gist associated with the provided gist_id
+
+        Does not require authorization.
+        """
 
         data = await self.fetch_data(gist_id)
         return Gist(data, self)
