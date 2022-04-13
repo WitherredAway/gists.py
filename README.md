@@ -2,6 +2,7 @@
 
 A simple asynchronous python wrapper for the [GitHub Gists](https://docs.github.com/en/rest/reference/gists) API
 ----------
+This API wrapper mainly focuses on the Gists part of the GitHub API, not the entire API
 
 ## Features
 *All unchecked features are planned*
@@ -47,11 +48,28 @@ import asyncio
 import gists
 
 # Create a client instance
-client = gists.Client("YOUR GITHUB PERSONAL ACCESS TOKEN")
+client = gists.Client()
+```
+### Get a gist
+```py
+async def main_get():
+    # Getting a gist does not require authorization
+
+    # This method fetches the gist associated with the provided gist id, and returns a Gist object
+    gist = await client.get_gist("GIST ID")
+    return gist
+
+# Run the main_get() function
+gist = asyncio.run(main_get())
+# Print the gist's description
+print(gist.description)
 ```
 ### Create a new gist
 ```py
 async def main_create() -> gists.Gist:
+    # Creating a gist requires authorization, use client.authorize to authorize the client
+    await client.authorize("YOUR GITHUB PERSONAL ACCESS TOKEN")
+    
     # The description to set
     description = "Hi this is a gist"
 
@@ -88,21 +106,11 @@ gist_1 = asyncio.run(main_create())
 # Print the gist's id
 print(gist_1.id)
 ```
-### Get a gist
-```py
-async def main_get():
-    # This method fetches the gist associated with the provided gist id, and returns a Gist object
-    gist = await client.get_gist(gist_1.id)
-    return gist
-
-# Run the main_get() function
-gist_1 = asyncio.run(main_get())
-# Print the gist's description
-print(gist_1.description)
-```
 ### Edit gist using the edit method of a Gist object
 ```py
 async def main_edit():
+    # Editing a gist requires authorization, but we already authorized the client when creating the gist
+
     # The description to edit to
     description = "Hello this is a gist, but edited"
 
