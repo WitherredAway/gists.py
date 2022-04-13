@@ -1,6 +1,4 @@
 import typing
-from typing import Optional, TypeVar, Type
-from types import TracebackType
 import yarl
 import asyncio
 import aiohttp
