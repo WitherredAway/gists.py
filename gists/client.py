@@ -134,7 +134,7 @@ class Client:
     async def update_gist(self, gist_id: str):
         """Re-fetch data and update the provided Gist object."""
 
-        updated_gist_data = await self.fetch_data(gist_id)
+        updated_gist_data = await self.fetch_gist_data(gist_id)
         return updated_gist_data
 
     async def edit_gist(
