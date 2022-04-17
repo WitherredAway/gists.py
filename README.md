@@ -73,27 +73,12 @@ async def main_create() -> gists.Gist:
     # The description to set
     description = "Hi this is a gist"
 
-    # The files to create in the gist
-
-    # Format:
-    # 
-    # files = {
-    #     'name_of_the_file.extension': {
-    #         'filename': "name_of_the_file.extension",
-    #         'content': "content_of_the_file"
-    #         }
-    #     }
-
-    files = {
-        'example.txt': {
-            'filename': "example.txt",
-            'content': "I like turtles"
-            },
-        'helloworld.py': {
-            'filename': "helloworld.py",
-            'content': "print(\"Hello, world\")"
-            }
-        }
+    # The files to create in the new gist
+    files = [
+        gists.File(name="example.txt", content="I like turtles"),
+        gists.File(name="helloworld.py", content="print(\"Hello, world!\")"),
+    ]
+    
     # Whether or not the gist should be public
     public = True
 
@@ -116,29 +101,16 @@ async def main_edit():
 
     # The files to edit in gist
 
-    files = {
-        # Use an existing filename to edit that file
-        'example.txt': {
-            'filename': "example.txt",
-            'content': "I like turtles and dogs"
-        },
-        # Edit the filename of an existing file
-        # 
-        # Format:
-        # 'old_name_of_the_file.extension': {
-        #     'filename': "new_name_of_the_file.extension",
-        #     'content': "content_of_the_file"
-        #     }
-        'helloworld.py': {
-            'filename': "hellouniverse.py",
-            'content': "print(\"Hello, universe\")"
-        },
-        # Create a new file by providing a new filename
-        'newfile.txt': {
-            'filename': "newfile.txt",
-            'content': "This is a new file"
-        }
-    }
+    files = [
+        # Use a unique filename for the name parameter to create a new file
+        gists.File(name="newfile.txt", content="New file"),
+        # Use an existing filename for the name parameter to edit that file
+        gists.File(name="example.txt", content="I like all animals"),
+        # Use an existing filename for the name parameter and
+        # pass in the new_name parameter to edit the name of that file,
+        # in which case the content parameter is not mandatory
+        gists.File(name="helloworld.py", new_name="hellouniverse.py")
+    ]
     await gist_1.edit(files=files, description=description)
     
 # Run the main_edit() function
