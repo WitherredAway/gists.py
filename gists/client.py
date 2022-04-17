@@ -5,6 +5,7 @@ import aiohttp
 import sys
 
 from .gist import Gist
+from .file import File
 from .exceptions import AuthorizationFailure, NotFound
 from .constants import API_URL
 
@@ -17,9 +18,9 @@ class Client:
 
     Use the authorize method to authorize
     """
-    
+
     def __init__(self):
-        self.access_token = None # Set by Client.authorize()
+        self.access_token = None  # Set by Client.authorize()
 
         self._request_lock = asyncio.Lock()
         self.user_agent = f"Gists.py (https://github.com/witherredaway/gists.py) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}"
@@ -29,7 +30,7 @@ class Client:
 
         # TODO User object rather than the raw json data
         self.user_data = await self.fetch_user_data()
-    
+
     async def request(
         self,
         method: str,
@@ -48,7 +49,9 @@ class Client:
         }
         if authorization:
             if not self.access_token:
-                raise AuthorizationFailure("To use functions that require authorization, please authorize the Client with Client.authorize")
+                raise AuthorizationFailure(
+                    "To use functions that require authorization, please authorize the Client with Client.authorize"
+                )
             else:
                 hdrs["Authorization"] = "token %s" % self.access_token
 
@@ -115,14 +118,18 @@ class Client:
     async def create_gist(
         self,
         *,
-        # TODO File object rather than a dictionary
-        files: typing.Dict,  # e.g. {'output.txt': {'filename': "output.txt", 'content': "Content of the file"}}
+        files: typing.List[File],
         description: str = None,
         public: bool = True,
     ) -> Gist:
         """Create a new gist and return a Gist object associated with that gist"""
 
-        data = {"public": public, "files": files}
+        files_dict = {}
+        for file in files:
+            # Update the files_dict with the dictionaries of each File object
+            files_dict.update(file.to_dict())
+
+        data = {"public": public, "files": files_dict}
         params = {"scope": "gist"}
 
         if description:
@@ -141,13 +148,17 @@ class Client:
         self,
         gist_id: str,
         *,
-        # TODO File object rather than a dictionary
-        files: typing.Dict,  # e.g. {'output.txt': {'filename': "output.txt", 'content': "Content of the file"}}
+        files: typing.List[File],
         description: str = None,
     ) -> typing.Dict:
         """Edit the gist associated with the provided gist id, and return the edited data"""
 
-        data = {"files": files}
+        files_dict = {}
+        for file in files:
+            # Update the files_dict with the dictionaries of each File object
+            files_dict.update(file.to_dict())
+
+        data = {"files": files_dict}
 
         if description:
             data["description"] = description

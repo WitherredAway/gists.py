@@ -23,7 +23,7 @@ class Gist:
         updated_gist_data = await self.client.update_gist(self.id)
         self._update_attrs(updated_gist_data)
 
-    async def edit(self, *, files: typing.Dict, description: str = None):
+    async def edit(self, *, files: typing.List[File], description: str = None):
         """Edit the gist associated with the Gist object, then update the Gist object"""
 
         edited_gist_data = await self.client.edit_gist(

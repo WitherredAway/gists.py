@@ -1,5 +1,6 @@
 from .client import *
 from .gist import *
+from .file import *
 from .exceptions import *
 
 __title__ = "gists"
