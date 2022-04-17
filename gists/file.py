@@ -10,7 +10,13 @@ F = TypeVar("F", bound="File")
 class File:
     """The file object that is provided when editing and creating gists"""
 
-    def __init__(self, *, name: str, content: Optional[str] = None, new_name: Optional[str] = None):
+    def __init__(
+        self,
+        *,
+        name: str,
+        content: Optional[str] = None,
+        new_name: Optional[str] = None
+    ):
         self.name: str = name
         self.content: str = content
 
@@ -19,16 +25,12 @@ class File:
     def to_dict(self) -> typing.Dict:
         """Returns the dictionary form of the File object"""
 
-        files_dict = {
-            self.name: {
-                "filename": self.new_name
-            }
-        }
+        files_dict = {self.name: {"filename": self.new_name}}
 
         if self.content:
             content_dict = {"content": self.content}
             files_dict[self.name].update(content_dict)
-            
+
         return files_dict
 
     @classmethod
