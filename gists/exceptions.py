@@ -11,8 +11,8 @@ __all__ = (
 )
 
 
-class ClientException(Exception):
-    """Exception that is raised when an operation in the Client class fails"""
+class GistsException(Exception):
+    """Base exception class"""
 
     pass
 
