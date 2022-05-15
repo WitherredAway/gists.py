@@ -6,7 +6,7 @@ import sys
 
 from .gist import Gist
 from .file import File
-from .exceptions import AuthorizationFailure, NotFound
+from .exceptions import HTTPException, AuthorizationFailure, NotFound, DataFetchError
 from .constants import API_URL
 
 
@@ -21,9 +21,6 @@ class Client:
 
     def __init__(self):
         self.access_token = None  # Set by Client.authorize()
-
-        self._request_lock = asyncio.Lock()
-        self.user_agent = f"Gists.py (https://github.com/witherredaway/gists.py) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}"
 
     async def authorize(self, access_token: str):
         self.access_token = access_token
@@ -43,9 +40,9 @@ class Client:
     ) -> typing.Dict:
         """The method to make asynchronous requests to the GitHub API"""
 
-        hdrs = {
+        headers_final = {
             "Accept": "application/vnd.github.v3+json",
-            "User-Agent": self.user_agent,
+            "User-Agent": f"Gists.py (https://github.com/witherredaway/gists.py) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}",
         }
         if authorization:
             if not self.access_token:
@@ -53,43 +50,34 @@ class Client:
                     "To use functions that require authorization, please authorize the Client with Client.authorize"
                 )
             else:
-                hdrs["Authorization"] = "token %s" % self.access_token
+                headers_final["Authorization"] = "token %s" % self.access_token
 
-        request_url = yarl.URL(API_URL) / url
+        request_url = f'{API_URL}/{url}'
 
         if headers is not None and isinstance(headers, dict):
-            hdrs.update(headers)
+            headers_final.update(headers)
 
-        await self._request_lock.acquire()
-        try:
-            async with aiohttp.ClientSession() as session:
-                response = await session.request(
-                    method, request_url, params=params, json=data, headers=hdrs
+        async with aiohttp.ClientSession() as session:
+            response = await session.request(
+                method, request_url, params=params, json=data, headers=headers_final
+            )
+            try:
+                data = await response.json()
+            except aiohttp.client_exceptions.ContentTypeError:
+                raise DataFetchError("Invalid data fetched, failed to convert to json.")
+
+            remaining = response.headers.get("X-Ratelimit-Remaining")
+            
+            if 300 > response.status >= 200:
+                return data
+            elif response.status == 429 or remaining == "0":
+                raise HTTPException(response, data)
+            elif response.status == 404:
+                raise NotFound(response, data)
+            elif response.status == 401:
+                raise AuthorizationFailure(
+                    "Invalid personal access token has been passed."
                 )
-                remaining = response.headers.get("X-Ratelimit-Remaining")
-                try:
-                    data = await response.json()
-                except aiohttp.client_exceptions.ContentTypeError:
-                    data = response.content
-                if response.status == 429 or remaining == "0":
-                    reset_after = float(response.headers.get("X-Ratelimit-Reset-After"))
-                    await asyncio.sleep(reset_after)
-                    self._request_lock.release()
-                    return await self.request(
-                        method, request_url, params=params, data=data, headers=headers
-                    )
-                elif 300 > response.status >= 200:
-                    return data
-                elif response.status == 404:
-                    raise NotFound(response, data)
-                elif response.status == 401:
-                    raise AuthorizationFailure(
-                        "Invalid personal access token has been passed."
-                    )
-
-        finally:
-            if self._request_lock.locked():
-                self._request_lock.release()
 
     async def fetch_user_data(self) -> typing.Dict:
         """Fetch data of the authenticated user"""
