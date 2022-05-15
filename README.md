@@ -29,14 +29,22 @@ This API wrapper mainly focuses on the Gists part of the GitHub API, not the ent
 - [ ] `DELETE`ing from `/gists/{gist_id}/comments/{comment_id}` to delete a comment of the authenticated user on a Gist
 
 ## Installation
+### Windows
 ```sh
-pip install gists.py
+py -m pip install gists.py
 ```
 or
 ```sh
-pip install git+https://github.com/WitherredAway/gists.py
+py -m pip install git+https://github.com/WitherredAway/gists.py
 ```
-
+### Linux/macOS
+```sh
+python3 -m pip install gists.py
+```
+or
+```sh
+python3 -m pip install git+https://github.com/WitherredAway/gists.py
+```
 ## Usage examples
 *This section is a work in progress*
 
