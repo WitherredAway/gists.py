@@ -59,3 +59,9 @@ class NotFound(HTTPException):
     """HTTPException that is raised when the status code is 404"""
 
     pass
+
+
+class DataFetchError(ClientException):
+    """Exception that is raised when fetching data fails."""
+
+    pass
