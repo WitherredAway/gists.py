@@ -136,7 +136,7 @@ class Client:
         return Gist(js, self)
 
     async def update_gist(self, gist_id: str):
-        """Re-fetch data and update the provided Gist object."""
+        """Alias of fetch_gist_data, used to fetch a gist's data."""
 
         updated_gist_data = await self.fetch_gist_data(gist_id)
         return updated_gist_data
