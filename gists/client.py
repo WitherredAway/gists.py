@@ -1,6 +1,4 @@
 import typing
-import yarl
-import asyncio
 import aiohttp
 import sys
 
@@ -61,11 +59,12 @@ class Client:
             response = await session.request(
                 method, request_url, params=params, json=data, headers=headers_final
             )
+
             try:
                 data = await response.json()
             except aiohttp.client_exceptions.ContentTypeError:
-                raise DataFetchError("Invalid data fetched, failed to convert to json.")
-
+                data = response.content
+            
             remaining = response.headers.get("X-Ratelimit-Remaining")
 
             if 300 > response.status >= 200:
