@@ -91,7 +91,7 @@ async def main_create() -> gists.Gist:
     public = True
 
     # This method creates a new gist and returns a Gist object associated with that gist
-    gist = await client.create_gist(files, description=description, public=public)
+    gist = await client.create_gist(files=files, description=description, public=public)
     return gist
         
 # Run the main_create() function
