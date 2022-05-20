@@ -36,15 +36,15 @@ class HTTPException(ClientException):
 
         if isinstance(data, dict):
             self.code = data.get("code", 0)
-            
+
             self.text = data.get("message", "")
         else:
             self.text = data or ""
             self.code = 0
 
-        message = f'{self.response.status} {self.response.reason} ({self.code})'
+        message = f"{self.response.status} {self.response.reason} ({self.code})"
         if len(self.text):
-            message += f': {self.text}'
+            message += f": {self.text}"
 
         super().__init__(message)
 

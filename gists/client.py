@@ -52,7 +52,7 @@ class Client:
             else:
                 headers_final["Authorization"] = "token %s" % self.access_token
 
-        request_url = f'{API_URL}/{url}'
+        request_url = f"{API_URL}/{url}"
 
         if headers is not None and isinstance(headers, dict):
             headers_final.update(headers)
@@ -67,7 +67,7 @@ class Client:
                 raise DataFetchError("Invalid data fetched, failed to convert to json.")
 
             remaining = response.headers.get("X-Ratelimit-Remaining")
-            
+
             if 300 > response.status >= 200:
                 return data
             elif response.status == 429 or remaining == "0":
@@ -82,16 +82,25 @@ class Client:
     async def fetch_user_data(self) -> typing.Dict:
         """Fetch data of the authenticated user"""
 
-        # TODO User object rather than the raw json data
-        user_data: typing.Dict = await self.request("GET", "user")
+        try:
+            # TODO User object rather than the raw json data
+            user_data: typing.Dict = await self.request(
+                "GET", "user", authorization=True
+            )
+        except NotFound as error:
+            raise NotFound(error.response, "User not found")
+
         return user_data
 
     async def fetch_gist_data(self, gist_id: str) -> typing.Dict:
         """Fetch data of a Gist"""
 
-        gist_data: typing.Dict = await self.request(
-            "GET", "gists/%s" % gist_id, authorization=False
-        )
+        try:
+            gist_data: typing.Dict = await self.request(
+                "GET", "gists/%s" % gist_id, authorization=False
+            )
+        except NotFound as error:
+            raise NotFound(error.response, "Gist not found")
         return gist_data
 
     async def get_gist(self, gist_id: str) -> Gist:
@@ -151,10 +160,18 @@ class Client:
         if description:
             data["description"] = description
 
-        edited_gist_data = await self.request("PATCH", "gists/%s" % gist_id, data=data)
+        try:
+            edited_gist_data = await self.request(
+                "PATCH", "gists/%s" % gist_id, data=data
+            )
+        except NotFound as error:
+            raise NotFound(error.response, "Gist not found")
         return edited_gist_data
 
     async def delete_gist(self, gist_id: str):
         """Delete the gist associated with the provided gist id"""
 
-        await self.request("DELETE", "gists/%s" % gist_id)
+        try:
+            await self.request("DELETE", "gists/%s" % gist_id)
+        except NotFound as error:
+            raise NotFound(error.response, "Gist not found")
