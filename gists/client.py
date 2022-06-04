@@ -65,7 +65,7 @@ class Client:
                 data = await response.json()
             except aiohttp.client_exceptions.ContentTypeError:
                 data = response.content
-            
+
             remaining = response.headers.get("X-Ratelimit-Remaining")
 
             if 300 > response.status >= 200:

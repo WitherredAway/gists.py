@@ -108,7 +108,7 @@ class Gist:
         files_dict = {}
         for file in files:
             files_dict.update(file.to_dict())
-            
+
         self._files = files_dict
 
     @property
@@ -125,18 +125,16 @@ class Gist:
         updated_gist_data = await self.client.update_gist(self.id)
         self._update_attrs(updated_gist_data)
 
-    async def edit(self, *, files: Optional[typing.List[File]] = None, description: str = None):
+    async def edit(
+        self, *, files: Optional[typing.List[File]] = None, description: str = None
+    ):
         """Edit the gist associated with the Gist object, then update the Gist object"""
 
-        kwargs = {
-            'description': description
-        }
+        kwargs = {"description": description}
         if files:
-            kwargs['files'] = files
+            kwargs["files"] = files
 
-        edited_gist_data = await self.client.edit_gist(
-            self.id, **kwargs
-        )
+        edited_gist_data = await self.client.edit_gist(self.id, **kwargs)
         self._update_attrs(edited_gist_data)
 
     async def delete(self):
