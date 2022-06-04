@@ -1,3 +1,8 @@
+"""
+Module containing the File object for files in a gist
+"""
+
+
 import typing
 from typing import Optional, TypeVar
 
@@ -21,6 +26,13 @@ class File:
         self.content: str = content
 
         self.new_name: str = new_name or self.name
+
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, File)
+            and self.name == other.name
+            and self.content == other.content
+        )
 
     def to_dict(self) -> typing.Dict:
         """Returns the dictionary form of the File object"""
@@ -49,7 +61,7 @@ class File:
         # }
 
         file_objs = []
-        for name, value in files_dict.items():
+        for name in files_dict.keys():
             self = cls.__new__(cls)
 
             self.name = name
@@ -58,4 +70,4 @@ class File:
 
             file_objs.append(self)
 
-        return file_objs
+        return list(sorted(file_objs, key=lambda f: f.name))

@@ -1,4 +1,10 @@
+"""
+Module containing the Gist object
+"""
+
+
 import typing
+from typing import Optional
 import datetime
 
 from .file import File
@@ -40,6 +46,26 @@ class Gist:
 
         self._update_attrs(data)
 
+    def __eq__(self, other):
+        """Equality comparison. Compares:
+        - Types of the two objects
+        - Description of the two Gist objects
+        - Files of the two Gist objects
+            - Files' names
+            - Files' contents
+        """
+        if not (
+            isinstance(other, Gist)
+            and self.description == other.description
+            and len(self.files) == len(other.files)
+        ):
+            return False
+
+        for self_file, other_file in zip(self.files, other.files):
+            if self_file != other_file:
+                return False
+        return True
+
     def _update_attrs(self, data: typing.Dict):
         """Update the Gist object's attributes with the provided data"""
 
@@ -65,6 +91,7 @@ class Gist:
         self.user: None = data.get("user", None)
 
     def _get_dt_obj(self, time: str) -> datetime.datetime:
+        """Internal method to convert string datetime format to datetime object"""
         time = time + " +0000"  # Tells datetime that the timezone is UTC
         dt_obj: datetime.datetime = datetime.datetime.strptime(time, TIME_FORMAT)
         return dt_obj
@@ -83,8 +110,12 @@ class Gist:
         return file_objs
 
     @files.setter
-    def files(self, value: typing.Dict):
-        self._files = value
+    def files(self, files: typing.List[File]):
+        files_dict = {}
+        for file in files:
+            files_dict.update(file.to_dict())
+
+        self._files = files_dict
 
     @property
     def updated_at(self) -> datetime.datetime:
@@ -100,12 +131,16 @@ class Gist:
         updated_gist_data = await self.client.update_gist(self.id)
         self._update_attrs(updated_gist_data)
 
-    async def edit(self, *, files: typing.List[File], description: str = None):
+    async def edit(
+        self, *, files: Optional[typing.List[File]] = None, description: str = None
+    ):
         """Edit the gist associated with the Gist object, then update the Gist object"""
 
-        edited_gist_data = await self.client.edit_gist(
-            self.id, files=files, description=description
-        )
+        kwargs = {"description": description}
+        if files:
+            kwargs["files"] = files
+
+        edited_gist_data = await self.client.edit_gist(self.id, **kwargs)
         self._update_attrs(edited_gist_data)
 
     async def delete(self):

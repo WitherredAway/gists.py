@@ -1,3 +1,8 @@
+"""
+Module containing the exceptions that the wrapper uses
+"""
+
+
 import typing
 from typing import Optional, Union
 
@@ -24,6 +29,8 @@ class ClientException(GistsException):
 
 
 class HTTPException(ClientException):
+    """Exception that is raised for HTTP request related failures"""
+
     def __init__(
         self,
         response: aiohttp.ClientResponse,
