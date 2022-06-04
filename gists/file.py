@@ -23,7 +23,11 @@ class File:
         self.new_name: str = new_name or self.name
 
     def __eq__(self, other) -> bool:
-        return self.name == other.name and self.content == other.content
+        return (
+            type(self) == type(other)
+            and self.name == other.name
+            and self.content == other.content
+        )
 
     def to_dict(self) -> typing.Dict:
         """Returns the dictionary form of the File object"""
