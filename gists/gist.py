@@ -41,6 +41,26 @@ class Gist:
 
         self._update_attrs(data)
 
+    def __eq__(self, other):
+        """Equality comparison. Compares:
+        - Types of the two objects
+        - Description of the two Gist objects
+        - Files of the two Gist objects
+            - Files' names
+            - Files' contents
+        """
+        if type(self) != type(other):
+            return False
+        if self.description != other.description:
+            return False
+        if len(self.files) != len(other.files):
+            return False
+
+        for self_file, other_file in zip(self.files, other.files):
+            if self_file != other_file:
+                return False
+        return True
+
     def _update_attrs(self, data: typing.Dict):
         """Update the Gist object's attributes with the provided data"""
 
