@@ -1,4 +1,5 @@
 import typing
+from typing import Optional
 import aiohttp
 import sys
 
@@ -144,17 +145,19 @@ class Client:
         self,
         gist_id: str,
         *,
-        files: typing.List[File],
+        files: Optional[typing.List[File]] = None,
         description: str = None,
     ) -> typing.Dict:
         """Edit the gist associated with the provided gist id, and return the edited data"""
 
-        files_dict = {}
-        for file in files:
-            # Update the files_dict with the dictionaries of each File object
-            files_dict.update(file.to_dict())
+        data = {}
 
-        data = {"files": files_dict}
+        if files:
+            files_dict = {}
+            for file in files:
+                # Update the files_dict with the dictionaries of each File object
+                files_dict.update(file.to_dict())
+            data["files"] = files_dict
 
         if description:
             data["description"] = description

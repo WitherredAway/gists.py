@@ -1,4 +1,5 @@
 import typing
+from typing import Optional
 import datetime
 
 from .file import File
@@ -100,11 +101,17 @@ class Gist:
         updated_gist_data = await self.client.update_gist(self.id)
         self._update_attrs(updated_gist_data)
 
-    async def edit(self, *, files: typing.List[File], description: str = None):
+    async def edit(self, *, files: Optional[typing.List[File]] = None, description: str = None):
         """Edit the gist associated with the Gist object, then update the Gist object"""
 
+        kwargs = {
+            'description': description
+        }
+        if files:
+            kwargs['files'] = files
+
         edited_gist_data = await self.client.edit_gist(
-            self.id, files=files, description=description
+            self.id, **kwargs
         )
         self._update_attrs(edited_gist_data)
 
