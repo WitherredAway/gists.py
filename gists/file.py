@@ -61,4 +61,4 @@ class File:
 
             file_objs.append(self)
 
-        return file_objs
+        return list(sorted(file_objs, key=lambda f: f.name))
