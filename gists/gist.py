@@ -104,8 +104,12 @@ class Gist:
         return file_objs
 
     @files.setter
-    def files(self, value: typing.Dict):
-        self._files = value
+    def files(self, files: typing.List[File]):
+        files_dict = {}
+        for file in files:
+            files_dict.update(file.to_dict())
+            
+        self._files = files_dict
 
     @property
     def updated_at(self) -> datetime.datetime:
