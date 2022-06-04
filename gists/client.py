@@ -1,11 +1,17 @@
+"""
+Module containing the main Client class used to send requests
+"""
+
+
 import typing
 from typing import Optional
-import aiohttp
 import sys
+
+import aiohttp
 
 from .gist import Gist
 from .file import File
-from .exceptions import HTTPException, AuthorizationFailure, NotFound, DataFetchError
+from .exceptions import HTTPException, AuthorizationFailure, NotFound
 from .constants import API_URL
 
 
@@ -21,7 +27,13 @@ class Client:
     def __init__(self):
         self.access_token = None  # Set by Client.authorize()
 
+        self.user_data = None
+
     async def authorize(self, access_token: str):
+        """Method used to authorize the client,
+        In order to send requests that need authorization
+        """
+
         self.access_token = access_token
 
         # TODO User object rather than the raw json data
@@ -41,15 +53,18 @@ class Client:
 
         headers_final = {
             "Accept": "application/vnd.github.v3+json",
-            "User-Agent": f"Gists.py (https://github.com/witherredaway/gists.py) Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}",
+            "User-Agent": (
+                f"Gists.py (https://github.com/witherredaway/gists.py) "
+                f"Python/{sys.version_info[0]}.{sys.version_info[1]} aiohttp/{aiohttp.__version__}"
+            ),
         }
         if authorization:
             if not self.access_token:
                 raise AuthorizationFailure(
-                    "To use functions that require authorization, please authorize the Client with Client.authorize"
+                    "To use functions that require authorization, "
+                    "please authorize the Client with Client.authorize"
                 )
-            else:
-                headers_final["Authorization"] = "token %s" % self.access_token
+            headers_final["Authorization"] = f"token {self.access_token}"
 
         request_url = f"{API_URL}/{url}"
 
@@ -97,7 +112,7 @@ class Client:
 
         try:
             gist_data: typing.Dict = await self.request(
-                "GET", "gists/%s" % gist_id, authorization=False
+                "GET", f"gists/{gist_id}", authorization=False
             )
         except NotFound as error:
             raise NotFound(error.response, "Gist not found")
@@ -132,8 +147,8 @@ class Client:
         if description:
             data["description"] = description
 
-        js = await self.request("POST", "gists", data=data, params=params)
-        return Gist(js, self)
+        gist_data = await self.request("POST", "gists", data=data, params=params)
+        return Gist(gist_data, self)
 
     async def update_gist(self, gist_id: str):
         """Alias of fetch_gist_data, used to fetch a gist's data."""
@@ -164,7 +179,7 @@ class Client:
 
         try:
             edited_gist_data = await self.request(
-                "PATCH", "gists/%s" % gist_id, data=data
+                "PATCH", f"gists/{gist_id}", data=data
             )
         except NotFound as error:
             raise NotFound(error.response, "Gist not found")
@@ -174,6 +189,6 @@ class Client:
         """Delete the gist associated with the provided gist id"""
 
         try:
-            await self.request("DELETE", "gists/%s" % gist_id)
+            await self.request("DELETE", f"gists/{gist_id}")
         except NotFound as error:
             raise NotFound(error.response, "Gist not found")

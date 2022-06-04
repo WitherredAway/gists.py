@@ -1,6 +1,12 @@
+"""
+Module containing the Gist object
+"""
+
+
 import typing
 from typing import Optional
 import datetime
+from functools import cached_property
 
 from .file import File
 from .constants import TIME_FORMAT
@@ -49,11 +55,11 @@ class Gist:
             - Files' names
             - Files' contents
         """
-        if type(self) != type(other):
-            return False
-        if self.description != other.description:
-            return False
-        if len(self.files) != len(other.files):
+        if not (
+            isinstance(other, Gist)
+            and self.description == other.description
+            and len(self.files) == len(other.files)
+        ):
             return False
 
         for self_file, other_file in zip(self.files, other.files):
@@ -86,6 +92,7 @@ class Gist:
         self.user: None = data.get("user", None)
 
     def _get_dt_obj(self, time: str) -> datetime.datetime:
+        """Internal method to convert string datetime format to datetime object"""
         time = time + " +0000"  # Tells datetime that the timezone is UTC
         dt_obj: datetime.datetime = datetime.datetime.strptime(time, TIME_FORMAT)
         return dt_obj

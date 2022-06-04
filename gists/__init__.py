@@ -1,3 +1,9 @@
+"""
+Github Gists API wrapper
+
+A simple asynchronous python wrapper for the GitHub Gists API
+"""
+
 from .client import *
 from .gist import *
 from .file import *
