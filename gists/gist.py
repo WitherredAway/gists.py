@@ -6,7 +6,6 @@ Module containing the Gist object
 import typing
 from typing import Optional
 import datetime
-from functools import cached_property
 
 from .file import File
 from .constants import TIME_FORMAT
