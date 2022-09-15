@@ -160,8 +160,8 @@ class Client:
         self,
         gist_id: str,
         *,
+        description: Optional[str] = None,
         files: Optional[typing.List[File]] = None,
-        description: str = None,
     ) -> typing.Dict:
         """Edit the gist associated with the provided gist id, and return the edited data"""
 

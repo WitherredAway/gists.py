@@ -28,6 +28,12 @@ class ClientException(GistsException):
     pass
 
 
+class GistException(GistsException):
+    """Exception that is raised when an operation in the Client class fails"""
+
+    pass
+
+
 class HTTPException(ClientException):
     """Exception that is raised for HTTP request related failures"""
 

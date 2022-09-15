@@ -6,8 +6,10 @@ Module containing the Gist object
 import typing
 from typing import Optional
 import datetime
+from functools import cached_property
 
 from .file import File
+from .exceptions import GistException
 from .constants import TIME_FORMAT
 
 
@@ -23,8 +25,10 @@ class Gist:
         "comments_url",
         "commits_url",
         "_created_at",
+        "_description",
         "description",
         "_files",
+        "files",
         "forks",
         "forks_url",
         "git_pull_url",
@@ -73,7 +77,7 @@ class Gist:
         self.comments_url: str = data.get("comments_url", None)
         self.commits_url: str = data.get("commits_url", None)
         self._created_at: str = data.get("created_at", None)
-        self.description: str = data.get("description", None)
+        self._description: str = data.get("description", None)
         self._files: typing.Dict = data.get("files", None)
         self.forks: typing.List = data.get("forks", None)  # TODO Fork object
         self.forks_url: str = data.get("forks_url", None)
@@ -90,7 +94,11 @@ class Gist:
         self.api_url: str = data.get("url", None)
         self.user: None = data.get("user", None)
 
-    def _get_dt_obj(self, time: str) -> datetime.datetime:
+        self.description: str = self._description
+        self.files: typing.List[File] = File.from_dict(self._files)
+
+    @staticmethod
+    def _get_dt_obj(time: str) -> datetime.datetime:
         """Internal method to convert string datetime format to datetime object"""
         time = time + " +0000"  # Tells datetime that the timezone is UTC
         dt_obj: datetime.datetime = datetime.datetime.strptime(time, TIME_FORMAT)
@@ -103,19 +111,6 @@ class Gist:
     @created_at.setter
     def created_at(self, value: str):
         self._created_at = value
-
-    @property
-    def files(self) -> typing.List[File]:
-        file_objs: typing.List[File] = File.from_dict(self._files)
-        return file_objs
-
-    @files.setter
-    def files(self, files: typing.List[File]):
-        files_dict = {}
-        for file in files:
-            files_dict.update(file.to_dict())
-
-        self._files = files_dict
 
     @property
     def updated_at(self) -> datetime.datetime:
@@ -132,13 +127,39 @@ class Gist:
         self._update_attrs(updated_gist_data)
 
     async def edit(
-        self, *, files: Optional[typing.List[File]] = None, description: str = None
+        self,
+        *,
+        description: Optional[str] = None,
+        files: Optional[typing.List[File]] = None
     ):
         """Edit the gist associated with the Gist object, then update the Gist object"""
 
-        kwargs = {"description": description}
-        if files:
-            kwargs["files"] = files
+        # Since both files and description are optional arguments,
+        # you can edit a file through Gist.files (e.g. Gist.files[0].content = "Edited content")
+        # or the description through Gist.description (e.g. Gist.description = "Edited description")
+        # and then call Gist.edit() without passing any args to sync the gist with the changed values.
+        if not description:
+            description = self.description
+
+        if not files:
+            files = self.files
+
+        # If there are no changes, the gist will not edit and the Gist object will raise an error
+        if all(
+            (
+                self.description == self._description,
+                all(
+                    (
+                        file.name == self._files[file.name]["filename"]
+                        and file.content == self._files[file.name]["content"]
+                        for file in self.files
+                    )
+                ),
+            )
+        ):
+            raise GistException("No changes found to edit.")
+
+        kwargs = {"description": description, "files": files}
 
         edited_gist_data = await self.client.edit_gist(self.id, **kwargs)
         self._update_attrs(edited_gist_data)
