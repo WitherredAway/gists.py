@@ -144,20 +144,18 @@ class Gist:
         if not files:
             files = self.files
 
-        # If there are no changes, the gist will not edit and the Gist object will raise an error
+        files_dict = {}
+        for file in files:
+            # Update the files_dict with the dictionaries of each File object
+            files_dict.update(file.to_dict())
+        # If there are no changes, the gist will not edit
         if all(
             (
                 self.description == self._description,
-                all(
-                    (
-                        file.name == self._files[file.name]["filename"]
-                        and file.content == self._files[file.name]["content"]
-                        for file in self.files
-                    )
-                ),
+                files_dict == self._files,
             )
         ):
-            raise GistException("No changes found to edit.")
+            return
 
         kwargs = {"description": description, "files": files}
 
