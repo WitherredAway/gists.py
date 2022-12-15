@@ -2,9 +2,7 @@
 Module containing the File object for files in a gist
 """
 
-
-import typing
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Dict, List
 
 
 __all__ = ("File",)
@@ -34,7 +32,7 @@ class File:
             and self.content == other.content
         )
 
-    def to_dict(self) -> typing.Dict:
+    def to_dict(self) -> Dict:
         """Returns the dictionary form of the File object"""
 
         files_dict = {self.name: {"filename": self.new_name}}
@@ -46,7 +44,7 @@ class File:
         return files_dict
 
     @classmethod
-    def from_dict(cls, files_dict: typing.Dict) -> typing.List[F]:
+    def from_dict(cls, files_dict: Dict) -> List[F]:
         """Returns a list of File objects from a files dictionary"""
 
         # Example structure of a files_dict:

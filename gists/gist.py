@@ -4,12 +4,10 @@ Module containing the Gist object
 from __future__ import annotations
 
 import typing
-from typing import Optional
+from typing import Optional, Dict, List
 import datetime
-from functools import cached_property
 
 from .file import File
-from .exceptions import GistException
 from .constants import TIME_FORMAT, GIST_URL_REGEX
 
 if typing.TYPE_CHECKING:
@@ -48,7 +46,7 @@ class Gist:
         "user",
     )
 
-    def __init__(self, data: typing.Dict, client: Client):
+    def __init__(self, data: Dict, client: Client):
         self.client = client
 
         self._update_attrs(data)
@@ -73,7 +71,7 @@ class Gist:
                 return False
         return True
 
-    def _update_attrs(self, data: typing.Dict):
+    def _update_attrs(self, data: Dict):
         """Update the Gist object's attributes with the provided data"""
 
         self.comments: int = data.get("comments", None)
@@ -81,16 +79,16 @@ class Gist:
         self.commits_url: str = data.get("commits_url", None)
         self._created_at: str = data.get("created_at", None)
         self._description: str = data.get("description", None)
-        self._files: typing.Dict = data.get("files", None)
-        self.forks: typing.List = data.get("forks", None)  # TODO Fork object
+        self._files: Dict = data.get("files", None)
+        self.forks: List = data.get("forks", None)  # TODO Fork object
         self.forks_url: str = data.get("forks_url", None)
         self.git_pull_url: str = data.get("git_pull_url", None)
         self.git_push_url: str = data.get("git_push_url", None)
-        self.history: typing.List = data.get("history", None)  # TODO History object
+        self.history: List = data.get("history", None)  # TODO History object
         self.url: str = data.get("html_url", None)
         self.id: str = data.get("id", None)
         self.node_id: str = data.get("node_id", None)
-        self.owner: typing.Dict = data.get("owner", None)  # TODO User object
+        self.owner: Dict = data.get("owner", None)  # TODO User object
         self.public: bool = data.get("public", None)
         self.truncated: bool = data.get("truncated", None)
         self._updated_at: str = data.get("updated_at", None)
@@ -98,7 +96,7 @@ class Gist:
         self.user: None = data.get("user", None)
 
         self.description: str = self._description
-        self.files: typing.List[File] = File.from_dict(self._files)
+        self.files: List[File] = File.from_dict(self._files)
 
     @staticmethod
     def _get_dt_obj(time: str) -> datetime.datetime:
@@ -130,10 +128,7 @@ class Gist:
         self._update_attrs(updated_gist_data)
 
     async def edit(
-        self,
-        *,
-        description: Optional[str] = None,
-        files: Optional[typing.List[File]] = None
+        self, *, description: Optional[str] = None, files: Optional[List[File]] = None
     ):
         """Edit the gist associated with the Gist object, then update the Gist object"""
 

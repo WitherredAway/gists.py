@@ -3,8 +3,7 @@ Module containing the main Client class used to send requests
 """
 
 
-import typing
-from typing import Optional
+from typing import Optional, Dict, List
 import sys
 
 import aiohttp
@@ -48,7 +47,7 @@ class Client:
         data=None,
         headers=None,
         authorization: bool = True,
-    ) -> typing.Dict:
+    ) -> Dict:
         """The method to make asynchronous requests to the GitHub API"""
 
         headers_final = {
@@ -94,24 +93,22 @@ class Client:
                     "Invalid personal access token has been passed."
                 )
 
-    async def fetch_user_data(self) -> typing.Dict:
+    async def fetch_user_data(self) -> Dict:
         """Fetch data of the authenticated user"""
 
         try:
             # TODO User object rather than the raw json data
-            user_data: typing.Dict = await self.request(
-                "GET", "user", authorization=True
-            )
+            user_data: Dict = await self.request("GET", "user", authorization=True)
         except NotFound as error:
             raise NotFound(error.response, "User not found")
 
         return user_data
 
-    async def fetch_gist_data(self, gist_id: str) -> typing.Dict:
+    async def fetch_gist_data(self, gist_id: str) -> Dict:
         """Fetch data of a Gist"""
 
         try:
-            gist_data: typing.Dict = await self.request(
+            gist_data: Dict = await self.request(
                 "GET", f"gists/{gist_id}", authorization=False
             )
         except NotFound as error:
@@ -130,7 +127,7 @@ class Client:
     async def create_gist(
         self,
         *,
-        files: typing.List[File],
+        files: List[File],
         description: str = None,
         public: bool = True,
     ) -> Gist:
@@ -161,8 +158,8 @@ class Client:
         gist_id: str,
         *,
         description: Optional[str] = None,
-        files: Optional[typing.List[File]] = None,
-    ) -> typing.Dict:
+        files: Optional[List[File]] = None,
+    ) -> Dict:
         """Edit the gist associated with the provided gist id, and return the edited data"""
 
         data = {}

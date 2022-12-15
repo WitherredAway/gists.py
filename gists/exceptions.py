@@ -3,8 +3,7 @@ Module containing the exceptions that the wrapper uses
 """
 
 
-import typing
-from typing import Optional, Union
+from typing import Optional, Union, Dict, Any
 
 import aiohttp
 
@@ -40,7 +39,7 @@ class HTTPException(ClientException):
     def __init__(
         self,
         response: aiohttp.ClientResponse,
-        data: Optional[Union[str, typing.Dict[str, typing.Any]]],
+        data: Optional[Union[str, Dict[str, Any]]],
     ):
         self.response: aiohttp.ClientResponse = response
         self.status: int = response.status
