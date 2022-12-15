@@ -115,11 +115,13 @@ class Client:
             raise NotFound(error.response, "Gist not found")
         return gist_data
 
-    async def get_gist(self, gist_id: str) -> Gist:
-        """Get a Gist object representing the gist associated with the provided gist_id
+    async def get_gist(self, gist_url_or_id: str) -> Gist:
+        """Get a Gist object representing the gist associated with the provided gist ID or url
 
         Does not require authorization.
         """
+
+        gist_id = Gist.gist_url_to_id(gist_url_or_id)
 
         data = await self.fetch_gist_data(gist_id)
         return Gist(data, self)
@@ -147,20 +149,24 @@ class Client:
         gist_data = await self.request("POST", "gists", data=data, params=params)
         return Gist(gist_data, self)
 
-    async def update_gist(self, gist_id: str):
+    async def update_gist(self, gist_url_or_id: str):
         """Alias of fetch_gist_data, used to fetch a gist's data."""
+
+        gist_id = Gist.gist_url_to_id(gist_url_or_id)
 
         updated_gist_data = await self.fetch_gist_data(gist_id)
         return updated_gist_data
 
     async def edit_gist(
         self,
-        gist_id: str,
+        gist_url_or_id: str,
         *,
         description: Optional[str] = None,
         files: Optional[List[File]] = None,
     ) -> Dict:
         """Edit the gist associated with the provided gist id, and return the edited data"""
+
+        gist_id = Gist.gist_url_to_id(gist_url_or_id)
 
         data = {}
 
@@ -182,8 +188,10 @@ class Client:
             raise NotFound(error.response, "Gist not found")
         return edited_gist_data
 
-    async def delete_gist(self, gist_id: str):
+    async def delete_gist(self, gist_url_or_id: str):
         """Delete the gist associated with the provided gist id"""
+
+        gist_id = Gist.gist_url_to_id(gist_url_or_id)
 
         try:
             await self.request("DELETE", f"gists/{gist_id}")

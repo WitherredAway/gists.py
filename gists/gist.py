@@ -171,6 +171,6 @@ class Gist:
 
         match = GIST_URL_REGEX.search(url_or_id)
         if match:
-            url_or_id = match.group("gist_id")
+            url_or_id = match.group('gist_id') or match.group('gist_id2')
 
         return url_or_id
