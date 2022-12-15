@@ -1,5 +1,6 @@
 .replit
 replit.nix
+*.code-workspace
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
