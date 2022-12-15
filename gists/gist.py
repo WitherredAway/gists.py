@@ -1,7 +1,7 @@
 """
 Module containing the Gist object
 """
-
+from __future__ import annotations
 
 import typing
 from typing import Optional
@@ -10,7 +10,10 @@ from functools import cached_property
 
 from .file import File
 from .exceptions import GistException
-from .constants import TIME_FORMAT
+from .constants import TIME_FORMAT, GIST_URL_REGEX
+
+if typing.TYPE_CHECKING:
+    from .client import Client
 
 
 __all__ = ("Gist",)
@@ -45,7 +48,7 @@ class Gist:
         "user",
     )
 
-    def __init__(self, data: typing.Dict, client: "Client"):
+    def __init__(self, data: typing.Dict, client: Client):
         self.client = client
 
         self._update_attrs(data)
@@ -166,3 +169,13 @@ class Gist:
         """Delete the gist associated with the Gist object, then delete the Gist object itself"""
 
         await self.client.delete_gist(self.id)
+
+    @staticmethod
+    def gist_url_to_id(url_or_id: str) -> str:
+        """Function to get a gist's ID from its url, or assumes that the input was the ID itself if it is not a url"""
+
+        match = GIST_URL_REGEX.search(url_or_id)
+        if match:
+            url_or_id = match.group("gist_id")
+
+        return url_or_id
