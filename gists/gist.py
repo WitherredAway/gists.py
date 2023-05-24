@@ -21,6 +21,7 @@ class Gist:
     """The Gist object that represents a gist"""
 
     __slots__ = (
+        "data",
         "client",
         "comments",
         "comments_url",
@@ -48,6 +49,7 @@ class Gist:
 
     def __init__(self, data: Dict, client: Client):
         self.client = client
+        self.data = data
 
         self._update_attrs(data)
 
@@ -73,6 +75,7 @@ class Gist:
 
     def _update_attrs(self, data: Dict):
         """Update the Gist object's attributes with the provided data"""
+        self.data = data
 
         self.comments: int = data.get("comments", None)
         self.comments_url: str = data.get("comments_url", None)

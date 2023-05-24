@@ -23,6 +23,7 @@ class File:
         self.name: str = name
         self.content: str = content
 
+        self.raw_url: str
         self.new_name: str = new_name or self.name
 
     def __eq__(self, other) -> bool:
@@ -65,6 +66,7 @@ class File:
             self.name = name
             self.content = files_dict[name].get("content", None)
             self.new_name = files_dict[name].get("filename", self.name)
+            self.raw_url = files_dict[name].get("raw_url")
 
             file_objs.append(self)
 
